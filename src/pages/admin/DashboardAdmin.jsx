@@ -104,10 +104,10 @@ export default function DashboardAdmin() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <AdminStatCard title="Total Hilang" value={stats.totalLost} icon={<Search className="w-5 h-5" />} color="bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" />
-        <AdminStatCard title="Total Ditemukan" value={stats.totalFound} icon={<Package className="w-5 h-5" />} color="bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400" />
-        <AdminStatCard title="Total Klaim" value={stats.totalClaims} icon={<ShieldCheck className="w-5 h-5" />} color="bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400" />
-        <AdminStatCard title="Total User" value={stats.totalUsers} icon={<Users className="w-5 h-5" />} color="bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400" />
+        <AdminStatCard title="Total Hilang" value={stats.totalLost} icon={<Search className="w-5 h-5" />} color="bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" to="/admin/lost-reports" />
+        <AdminStatCard title="Total Ditemukan" value={stats.totalFound} icon={<Package className="w-5 h-5" />} color="bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400" to="/items/found" />
+        <AdminStatCard title="Total Klaim" value={stats.totalClaims} icon={<ShieldCheck className="w-5 h-5" />} color="bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400" to="/admin/claims" />
+        <AdminStatCard title="Total User" value={stats.totalUsers} icon={<Users className="w-5 h-5" />} color="bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400" to="/admin/users" />
       </div>
 
       {/* Chart & Pending Claims */}
@@ -232,14 +232,26 @@ export default function DashboardAdmin() {
   );
 }
 
-function AdminStatCard({ title, value, icon, color }) {
-  return (
-    <div className="bg-card border border-border rounded-xl shadow-sm p-5 flex items-center gap-4">
+function AdminStatCard({ title, value, icon, color, to }) {
+  const content = (
+    <>
       <div className={`p-3 rounded-full ${color}`}>{icon}</div>
       <div>
         <p className="text-xs font-medium text-muted-foreground">{title}</p>
         <h3 className="text-2xl font-bold">{value}</h3>
       </div>
+    </>
+  );
+
+  const className = "bg-card border border-border rounded-xl shadow-sm p-5 flex items-center gap-4 hover:border-primary/30 hover:shadow-md transition-all";
+
+  return to ? (
+    <Link to={to} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <div className={className}>
+      {content}
     </div>
   );
 }
