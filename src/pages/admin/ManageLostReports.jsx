@@ -111,6 +111,28 @@ export default function ManageLostReports() {
     }
   };
 
+  const handleDelete = async (reportId, itemName) => {
+    const result = await Swal.fire({
+      title: 'Hapus Laporan?',
+      text: `Laporan barang hilang "${itemName}" akan dihapus permanen.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: 'hsl(0, 84.2%, 60.2%)',
+      cancelButtonText: 'Batal',
+      confirmButtonText: 'Ya, Hapus!',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await lostItemsService.delete(reportId);
+        toast.success('Laporan berhasil dihapus.');
+        fetchReports();
+      } catch (err) {
+        toast.error('Gagal menghapus laporan.');
+      }
+    }
+  };
+
   const filteredReports =
     filter === 'all' ? reports : reports.filter((r) => r.status === filter);
 
@@ -171,11 +193,9 @@ export default function ManageLostReports() {
             }`}
           >
             {tab.label}
-            {tab.key !== 'all' && (
-              <span className="ml-1.5 text-xs opacity-70">
-                ({reports.filter((r) => r.status === tab.key).length})
-              </span>
-            )}
+            <span className="ml-1.5 text-xs opacity-70">
+              ({tab.key === 'all' ? reports.length : reports.filter((r) => r.status === tab.key).length})
+            </span>
           </button>
         ))}
       </div>
@@ -324,6 +344,17 @@ export default function ManageLostReports() {
                       className="flex items-center justify-center gap-2 px-5 py-2.5 border border-destructive/40 text-destructive rounded-lg text-sm font-medium hover:bg-destructive/10 transition-colors"
                     >
                       <XCircle size={16} /> Nonaktifkan
+                    </button>
+                  </div>
+                )}
+
+                {(report.status === 'resolved' || report.status === 'rejected') && (
+                  <div className="flex gap-3 mt-4 pt-4 border-t border-border">
+                    <button
+                      onClick={() => handleDelete(report.id, report.nama_barang)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
+                    >
+                      <XCircle size={16} /> Hapus Laporan
                     </button>
                   </div>
                 )}

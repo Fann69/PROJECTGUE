@@ -89,11 +89,9 @@ export default function ManageClaims() {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filter === tab.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
           >
             {tab.label}
-            {tab.key !== 'all' && (
-              <span className="ml-1.5 text-xs opacity-70">
-                ({claims.filter(c => tab.key === 'all' || c.status === tab.key).length})
-              </span>
-            )}
+            <span className="ml-1.5 text-xs opacity-70">
+              ({tab.key === 'all' ? claims.length : claims.filter(c => c.status === tab.key).length})
+            </span>
           </button>
         ))}
       </div>
