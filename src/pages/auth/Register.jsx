@@ -31,16 +31,30 @@ export default function Register() {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // 1. Create auth user
+      // 1. Create auth user with metadata for trigger
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          data: {
+            nama: data.nama,
+            nim: data.nim,
+            nomor_hp: data.nomor_hp,
+          }
+        }
       });
 
       if (authError) throw authError;
 
+      // Check for existing email (Supabase returns user with empty identities if email exists)
+      if (authData?.user?.identities?.length === 0) {
+        toast.error('Email sudah terdaftar. Silakan gunakan email lain atau login.');
+        setIsLoading(false);
+        return;
+      }
+
       if (authData.user) {
-        // 2. Insert into profiles table
+        // 2. Insert into profiles table as fallback (in case DB trigger hasn't been created yet)
         const { error: profileError } = await supabase.from('profiles').insert([
           {
             id: authData.user.id,
@@ -52,12 +66,11 @@ export default function Register() {
         ]);
 
         if (profileError) {
-          console.error('Profile creation error:', profileError);
-          toast.error('Akun terbuat tapi gagal menyimpan profil. Hubungi admin.');
-        } else {
-          toast.success('Pendaftaran berhasil! Silakan login.');
-          navigate('/login');
+          console.log('Fallback profile insert status:', profileError.message);
         }
+        
+        toast.success('Pendaftaran berhasil! Silakan login (periksa email jika perlu verifikasi).');
+        navigate('/login');
       }
     } catch (error) {
       toast.error(error.message || 'Gagal mendaftar. Email mungkin sudah digunakan.');
