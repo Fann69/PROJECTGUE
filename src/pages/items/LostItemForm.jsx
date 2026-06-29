@@ -61,10 +61,11 @@ export default function LostItemForm() {
         deskripsi: data.deskripsi,
         lokasi_hilang: data.lokasi_hilang,
         tanggal_hilang: data.tanggal_hilang,
+        status: 'pending',
       };
       await lostItemsService.create(payload, data.foto?.[0]);
-      toast.success('Laporan kehilangan berhasil dibuat!');
-      navigate('/items/lost');
+      toast.success('Laporan berhasil dikirim! Menunggu verifikasi admin.');
+      navigate('/dashboard');
     } catch (err) {
       toast.error(err.message || 'Gagal membuat laporan.');
     } finally {
@@ -80,7 +81,13 @@ export default function LostItemForm() {
 
       <div className="bg-card border border-border rounded-2xl shadow-sm p-6 md:p-8">
         <h1 className="text-2xl font-bold mb-1">Laporan Barang Hilang</h1>
-        <p className="text-muted-foreground text-sm mb-8">Isi form di bawah dengan detail yang akurat untuk mempercepat proses pencarian.</p>
+        <p className="text-muted-foreground text-sm mb-4">Isi form di bawah dengan detail yang akurat untuk mempercepat proses pencarian.</p>
+
+        {/* Info Banner */}
+        <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg mb-6 text-sm text-amber-800 dark:text-amber-300">
+          <span className="mt-0.5 flex-shrink-0">⏳</span>
+          <p>Laporan Anda akan <strong>ditinjau oleh admin</strong> sebelum dipublikasikan. Anda akan mendapat notifikasi setelah disetujui.</p>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">

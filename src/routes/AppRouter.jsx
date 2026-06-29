@@ -24,6 +24,7 @@ import DashboardAdmin from '../pages/admin/DashboardAdmin';
 import ManageCategories from '../pages/admin/ManageCategories';
 import ManageClaims from '../pages/admin/ManageClaims';
 import ManageUsers from '../pages/admin/ManageUsers';
+import ManageLostReports from '../pages/admin/ManageLostReports';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, profile, loading } = useAuthStore();
@@ -96,6 +97,11 @@ export default function AppRouter() {
         <Route path="admin/users" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <ManageUsers />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/lost-reports" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ManageLostReports />
           </ProtectedRoute>
         } />
 

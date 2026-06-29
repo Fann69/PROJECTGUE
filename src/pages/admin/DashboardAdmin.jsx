@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { statsService, claimsService, activityLogsService } from '../../services/api';
-import { Users, Package, Search, ShieldCheck, Loader2, CheckCircle, XCircle, Clock, Activity } from 'lucide-react';
+import { Users, Package, Search, ShieldCheck, Loader2, CheckCircle, XCircle, Clock, Activity, FileSearch } from 'lucide-react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -166,7 +166,14 @@ export default function DashboardAdmin() {
       </div>
 
       {/* Admin Quick Links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <Link to="/admin/lost-reports" className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-sm transition-all flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-blue-500/10 text-blue-500"><FileSearch size={20} /></div>
+          <div>
+            <p className="font-semibold">Barang Hilang</p>
+            <p className="text-xs text-muted-foreground">Approve laporan barang hilang</p>
+          </div>
+        </Link>
         <Link to="/admin/categories" className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-sm transition-all flex items-center gap-4">
           <div className="p-3 rounded-lg bg-primary/10 text-primary"><Package size={20} /></div>
           <div>

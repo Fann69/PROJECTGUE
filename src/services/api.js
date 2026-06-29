@@ -64,6 +64,49 @@ export const lostItemsService = {
     return data;
   },
 
+  updateStatus: async (id, status, reporterName = '', itemName = 'Barang') => {
+    const { data, error } = await supabase
+      .from('lost_items')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Ambil user_id pelapor untuk notifikasi
+    const { data: itemData } = await supabase
+      .from('lost_items')
+      .select('user_id')
+      .eq('id', id)
+      .single();
+
+    if (itemData?.user_id) {
+      let judul = '';
+      let pesan = '';
+      if (status === 'published') {
+        judul = 'Laporan Disetujui';
+        pesan = `Laporan barang hilang Anda "${itemName}" telah disetujui dan dipublikasikan oleh admin.`;
+      } else if (status === 'rejected') {
+        judul = 'Laporan Ditolak';
+        pesan = `Maaf, laporan barang hilang Anda "${itemName}" ditolak oleh admin. Silakan hubungi admin untuk informasi lebih lanjut.`;
+      } else if (status === 'resolved') {
+        judul = 'Laporan Selesai';
+        pesan = `Laporan barang hilang Anda "${itemName}" telah ditandai selesai oleh admin.`;
+      }
+      if (judul) {
+        await supabase.from('notifications').insert([{ user_id: itemData.user_id, judul, pesan }]);
+      }
+    }
+
+    // Catat log aktivitas Admin
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await activityLogsService.log(user.id, `Memverifikasi laporan barang hilang "${itemName}" menjadi: ${status}`);
+    }
+
+    return data;
+  },
+
   delete: async (id) => {
     const { error } = await supabase.from('lost_items').delete().eq('id', id);
     if (error) throw error;
