@@ -205,6 +205,24 @@ export const foundItemsService = {
     const { error } = await supabase.from('found_items').delete().eq('id', id);
     if (error) throw error;
   },
+
+  updateStatus: async (id, status, reporterName = null, itemName = 'Barang') => {
+    const { data, error } = await supabase
+      .from('found_items')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Catat log aktivitas Admin
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await activityLogsService.log(user.id, `Mengubah status barang temuan "${itemName}" menjadi: ${status}`);
+    }
+
+    return data;
+  },
 };
 
 // ============ CATEGORIES ============
@@ -326,6 +344,11 @@ export const claimsService = {
     }
 
     return data;
+  },
+
+  delete: async (id) => {
+    const { error } = await supabase.from('claims').delete().eq('id', id);
+    if (error) throw error;
   },
 };
 

@@ -105,7 +105,7 @@ export default function DashboardAdmin() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatCard title="Total Hilang" value={stats.totalLost} icon={<Search className="w-5 h-5" />} color="bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" to="/admin/lost-reports" />
-        <AdminStatCard title="Total Ditemukan" value={stats.totalFound} icon={<Package className="w-5 h-5" />} color="bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400" to="/items/found" />
+        <AdminStatCard title="Total Ditemukan" value={stats.totalFound} icon={<Package className="w-5 h-5" />} color="bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400" to="/admin/found-reports" />
         <AdminStatCard title="Total Klaim" value={stats.totalClaims} icon={<ShieldCheck className="w-5 h-5" />} color="bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400" to="/admin/claims" />
         <AdminStatCard title="Total User" value={stats.totalUsers} icon={<Users className="w-5 h-5" />} color="bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400" to="/admin/users" />
       </div>

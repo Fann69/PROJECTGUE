@@ -57,6 +57,28 @@ export default function ManageClaims() {
     }
   };
 
+  const handleDelete = async (claimId) => {
+    const result = await Swal.fire({
+      title: 'Hapus Klaim?',
+      text: 'Data klaim ini akan dihapus secara permanen dari riwayat.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: 'hsl(0, 84.2%, 60.2%)',
+      cancelButtonText: 'Batal',
+      confirmButtonText: 'Ya, Hapus!',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await claimsService.delete(claimId);
+        toast.success('Klaim berhasil dihapus dari riwayat.');
+        fetchClaims();
+      } catch (err) {
+        toast.error('Gagal menghapus klaim.');
+      }
+    }
+  };
+
   const filteredClaims = filter === 'all' ? claims : claims.filter(c => c.status === filter);
   const pendingCount = claims.filter(c => c.status === 'pending').length;
 
@@ -179,6 +201,17 @@ export default function ManageClaims() {
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
                     >
                       <XCircle size={16} /> Tolak Klaim
+                    </button>
+                  </div>
+                )}
+
+                {(claim.status === 'approved' || claim.status === 'rejected') && (
+                  <div className="flex gap-3 mt-4 pt-4 border-t border-border">
+                    <button
+                      onClick={() => handleDelete(claim.id)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
+                    >
+                      <XCircle size={16} /> Hapus Klaim
                     </button>
                   </div>
                 )}
