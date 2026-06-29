@@ -47,7 +47,7 @@ export default function DashboardAdmin() {
     fetchData();
   }, []);
 
-  const handleClaimAction = async (claimId, action, itemId) => {
+  const handleClaimAction = async (claimId, action, itemId, claimerId, itemName) => {
     const isApprove = action === 'approved';
     const result = await Swal.fire({
       title: isApprove ? 'Setujui Klaim?' : 'Tolak Klaim?',
@@ -61,11 +61,12 @@ export default function DashboardAdmin() {
 
     if (result.isConfirmed) {
       try {
-        await claimsService.updateStatus(claimId, action, itemId);
+        await claimsService.updateStatus(claimId, action, itemId, claimerId, itemName);
         toast.success(isApprove ? 'Klaim berhasil disetujui!' : 'Klaim telah ditolak.');
         fetchData();
       } catch (err) {
-        toast.error('Gagal memperbarui klaim.');
+        console.error(err);
+        toast.error('Gagal memperbarui klaim: ' + (err.message || ''));
       }
     }
   };
@@ -146,13 +147,13 @@ export default function DashboardAdmin() {
                   <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{claim.alasan}</p>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleClaimAction(claim.id, 'approved', claim.item_id)}
+                      onClick={() => handleClaimAction(claim.id, 'approved', claim.item_id, claim.user_id, claim.found_items?.nama_barang)}
                       className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-600 hover:text-white rounded-lg transition-colors"
                     >
                       <CheckCircle size={14} /> Setujui
                     </button>
                     <button
-                      onClick={() => handleClaimAction(claim.id, 'rejected', null)}
+                      onClick={() => handleClaimAction(claim.id, 'rejected', null, claim.user_id, claim.found_items?.nama_barang)}
                       className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-600 hover:text-white rounded-lg transition-colors"
                     >
                       <XCircle size={14} /> Tolak

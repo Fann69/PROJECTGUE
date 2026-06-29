@@ -1,5 +1,29 @@
 import { supabase } from '../lib/supabase';
 
+// ============ ACTIVITY LOGS (harus di atas agar bisa dipakai service lain) ============
+export const activityLogsService = {
+  log: async (userId, activity) => {
+    // Tidak throw error agar tidak mengganggu flow utama
+    try {
+      await supabase.from('activity_logs').insert([{ user_id: userId, activity }]);
+    } catch (_) {}
+  },
+
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*, profiles(nama)')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data;
+  },
+};
+
+// Helper: sanitize nama file agar aman di storage
+const sanitizeFileName = (name) =>
+  name.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
+
 // ============ LOST ITEMS ============
 export const lostItemsService = {
   getAll: async ({ search = '', categoryId = '', page = 1, limit = 9 } = {}) => {
@@ -41,7 +65,7 @@ export const lostItemsService = {
     let fotoUrl = null;
     if (fotoFile) {
       const ext = fotoFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${ext}`;
+      const fileName = `${Date.now()}_${sanitizeFileName(fotoFile.name.replace(`.${ext}`, ''))}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from('item_images')
         .upload(fileName, fotoFile, { upsert: false });
@@ -49,12 +73,15 @@ export const lostItemsService = {
       const { data: urlData } = supabase.storage.from('item_images').getPublicUrl(fileName);
       fotoUrl = urlData.publicUrl;
     }
-    const { data, error } = await supabase.from('lost_items').insert([{ ...payload, foto: fotoUrl }]).select().single();
+    const { data, error } = await supabase
+      .from('lost_items')
+      .insert([{ ...payload, foto: fotoUrl }])
+      .select()
+      .single();
     if (error) throw error;
-    
-    // Catat log aktivitas
+
     await activityLogsService.log(payload.user_id, `Melaporkan barang hilang: ${payload.nama_barang}`);
-    
+
     return data;
   },
 
@@ -154,7 +181,7 @@ export const foundItemsService = {
     let fotoUrl = null;
     if (fotoFile) {
       const ext = fotoFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${ext}`;
+      const fileName = `${Date.now()}_${sanitizeFileName(fotoFile.name.replace(`.${ext}`, ''))}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from('item_images')
         .upload(fileName, fotoFile, { upsert: false });
@@ -162,12 +189,15 @@ export const foundItemsService = {
       const { data: urlData } = supabase.storage.from('item_images').getPublicUrl(fileName);
       fotoUrl = urlData.publicUrl;
     }
-    const { data, error } = await supabase.from('found_items').insert([{ ...payload, foto: fotoUrl }]).select().single();
+    const { data, error } = await supabase
+      .from('found_items')
+      .insert([{ ...payload, foto: fotoUrl }])
+      .select()
+      .single();
     if (error) throw error;
-    
-    // Catat log aktivitas
+
     await activityLogsService.log(payload.user_id, `Melaporkan barang temuan: ${payload.nama_barang}`);
-    
+
     return data;
   },
 
@@ -225,23 +255,32 @@ export const claimsService = {
   },
 
   create: async (payload, buktiFotoFile) => {
-    let fotoUrl = null;
-    if (buktiFotoFile) {
-      const ext = buktiFotoFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${buktiFotoFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('claim_proofs')
-        .upload(fileName, buktiFotoFile, { upsert: false });
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('claim_proofs').getPublicUrl(fileName);
-      fotoUrl = urlData.publicUrl;
+    // Upload foto bukti (wajib — kolom NOT NULL di DB)
+    if (!buktiFotoFile) {
+      throw new Error('Foto bukti kepemilikan wajib diupload.');
     }
-    const { data, error } = await supabase.from('claims').insert([{ ...payload, foto_bukti: fotoUrl }]).select().single();
+
+    const ext = buktiFotoFile.name.split('.').pop();
+    const safeName = sanitizeFileName(buktiFotoFile.name.replace(`.${ext}`, ''));
+    const fileName = `${Date.now()}_${safeName}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('claim_proofs')
+      .upload(fileName, buktiFotoFile, { upsert: false });
+    if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
+
+    const { data: urlData } = supabase.storage.from('claim_proofs').getPublicUrl(fileName);
+    const fotoUrl = urlData.publicUrl;
+
+    const { data, error } = await supabase
+      .from('claims')
+      .insert([{ ...payload, foto_bukti: fotoUrl }])
+      .select()
+      .single();
     if (error) throw error;
-    
-    // Catat log aktivitas
+
     await activityLogsService.log(payload.user_id, 'Mengajukan klaim kepemilikan barang');
-    
+
     return data;
   },
 
@@ -259,23 +298,23 @@ export const claimsService = {
       await supabase.from('notifications').insert([{
         user_id: claimerId,
         judul: status === 'approved' ? 'Klaim Disetujui' : 'Klaim Ditolak',
-        pesan: status === 'approved' 
-          ? `Klaim Anda untuk barang "${itemName}" telah disetujui admin. Silakan ambil barang Anda.` 
-          : `Maaf, klaim Anda untuk barang "${itemName}" ditolak karena bukti tidak valid.`
+        pesan: status === 'approved'
+          ? `Klaim Anda untuk barang "${itemName}" telah disetujui admin. Silakan ambil barang Anda.`
+          : `Maaf, klaim Anda untuk barang "${itemName}" ditolak karena bukti tidak valid.`,
       }]);
     }
 
     // Jika disetujui, update status barang di found_items
     if (status === 'approved' && itemId) {
       await supabase.from('found_items').update({ status: 'claimed' }).eq('id', itemId);
-      
-      // Ambil user_id si penemu (reporter) untuk dikirimkan notifikasi
+
+      // Notifikasi ke penemu barang
       const { data: itemData } = await supabase.from('found_items').select('user_id').eq('id', itemId).single();
       if (itemData?.user_id) {
         await supabase.from('notifications').insert([{
           user_id: itemData.user_id,
           judul: 'Barang Temuan Diklaim',
-          pesan: `Barang "${itemName}" yang Anda temukan telah diklaim dan disetujui oleh admin.`
+          pesan: `Barang "${itemName}" yang Anda temukan telah diklaim dan disetujui oleh admin.`,
         }]);
       }
     }
@@ -311,23 +350,6 @@ export const notificationsService = {
   markAllAsRead: async (userId) => {
     const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId);
     if (error) throw error;
-  },
-};
-
-// ============ ACTIVITY LOGS ============
-export const activityLogsService = {
-  log: async (userId, activity) => {
-    await supabase.from('activity_logs').insert([{ user_id: userId, activity }]);
-  },
-
-  getAll: async () => {
-    const { data, error } = await supabase
-      .from('activity_logs')
-      .select('*, profiles(nama)')
-      .order('created_at', { ascending: false })
-      .limit(100);
-    if (error) throw error;
-    return data;
   },
 };
 
