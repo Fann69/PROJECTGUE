@@ -167,12 +167,19 @@ export default function DashboardAdmin() {
       </div>
 
       {/* Admin Quick Links */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Link to="/admin/lost-reports" className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-sm transition-all flex items-center gap-4">
           <div className="p-3 rounded-lg bg-blue-500/10 text-blue-500"><FileSearch size={20} /></div>
           <div>
             <p className="font-semibold">Barang Hilang</p>
-            <p className="text-xs text-muted-foreground">Approve laporan barang hilang</p>
+            <p className="text-xs text-muted-foreground">Approve laporan hilang</p>
+          </div>
+        </Link>
+        <Link to="/admin/found-reports" className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-sm transition-all flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-green-500/10 text-green-500"><Package size={20} /></div>
+          <div>
+            <p className="font-semibold">Barang Temuan</p>
+            <p className="text-xs text-muted-foreground">Kelola laporan temuan</p>
           </div>
         </Link>
         <Link to="/admin/categories" className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-sm transition-all flex items-center gap-4">
